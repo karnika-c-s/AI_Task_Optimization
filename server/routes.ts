@@ -167,7 +167,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
+      // Create the task first
       const newTask = await storage.createTask(validationResult.data);
+      
+      // Auto-assign the task to an employee with the lowest workload if unassigned
+      if (!newTask.assigned_employee_id) {
+        try {
+          // Get all employees
+          const employees = await storage.getAllEmployees();
+          
+          if (employees.length > 0) {
+            // Sort employees by workload (lowest first) and efficiency (highest first)
+            const sortedEmployees = [...employees].sort((a, b) => {
+              // First, normalize workload by efficiency score
+              const normalizedWorkloadA = a.current_workload / a.efficiency_score;
+              const normalizedWorkloadB = b.current_workload / b.efficiency_score;
+              
+              // Then sort by normalized workload (ascending)
+              return normalizedWorkloadA - normalizedWorkloadB;
+            });
+            
+            // Assign to employee with lowest normalized workload
+            const bestEmployee = sortedEmployees[0];
+            
+            // Update task with assigned employee
+            const updatedTask = await storage.updateTaskAssignment(newTask.id, bestEmployee.id);
+            
+            // Update employee workload
+            const newWorkload = bestEmployee.current_workload + (newTask.estimated_effort || 1);
+            await storage.updateEmployeeWorkload(bestEmployee.id, newWorkload);
+            
+            // Return the updated task
+            res.status(201).json(updatedTask);
+            return;
+          }
+        } catch (assignError) {
+          console.error("Error auto-assigning new task:", assignError);
+          // Continue with the original task if assignment fails
+        }
+      }
+      
+      // If auto-assignment wasn't performed or failed, return the original task
       res.status(201).json(newTask);
     } catch (error) {
       res.status(500).json({ message: "Error creating task", error });

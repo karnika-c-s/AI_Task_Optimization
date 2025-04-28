@@ -197,34 +197,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ existingTask, employees, onSuccess 
           />
         )}
         
-        <FormField
-          control={form.control}
-          name="assigned_employee_id"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Assigned Employee</FormLabel>
-              <Select
-                onValueChange={(value) => field.onChange(value === 'null' ? null : parseInt(value))}
-                defaultValue={field.value?.toString() || 'null'}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select employee" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="null">Unassigned</SelectItem>
-                  {employees.map((employee) => (
-                    <SelectItem key={employee.id} value={employee.id.toString()}>
-                      {employee.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+{/* Employee assignment is now automatic */}
         
         <FormField
           control={form.control}
