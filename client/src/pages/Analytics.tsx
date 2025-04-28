@@ -376,10 +376,10 @@ const Analytics: React.FC = () => {
                   </div>
                   
                   <div>
-                    <h3 className="text-lg font-medium mb-2">Algorithm Impact</h3>
+                    <h3 className="text-lg font-medium mb-2">Workload Optimization</h3>
                     <p className="text-sm text-muted-foreground">
-                      The workload balancing algorithm has optimized task distribution based on employee efficiency scores, 
-                      resulting in a more equitable distribution of work while accounting for individual capabilities.
+                      Task distribution is optimized based on employee efficiency scores, 
+                      resulting in more equitable distribution of work while accounting for individual capabilities.
                     </p>
                   </div>
                 </div>
@@ -500,31 +500,31 @@ const Analytics: React.FC = () => {
               <CardHeader>
                 <CardTitle>System Performance Insights</CardTitle>
                 <CardDescription>
-                  Analysis of algorithm efficiency and optimization
+                  Analysis of task and workload optimization
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="flex flex-col justify-between p-4 h-full rounded-lg border bg-card">
-                    <h3 className="font-medium">Merge Sort</h3>
+                    <h3 className="font-medium">Task Prioritization</h3>
                     <p className="text-sm text-muted-foreground mt-2">
-                      Task sorting algorithm successfully prioritizes tasks based on importance with 
-                      O(n log n) complexity, efficiently handling {tasks.length} tasks.
+                      Smart prioritization system efficiently orders tasks based on importance, 
+                      handling {tasks.length} tasks in your workflow.
                     </p>
                   </div>
                   
                   <div className="flex flex-col justify-between p-4 h-full rounded-lg border bg-card">
-                    <h3 className="font-medium">Min-Heap Allocation</h3>
+                    <h3 className="font-medium">Assignment Optimization</h3>
                     <p className="text-sm text-muted-foreground mt-2">
-                      Optimal employee assignment achieved using min-heap, balancing 
-                      workload across {employees.length} team members based on efficiency scores.
+                      Optimal employee assignment balances workload across {' '}
+                      {employees.length} team members based on efficiency scores.
                     </p>
                   </div>
                   
                   <div className="flex flex-col justify-between p-4 h-full rounded-lg border bg-card">
-                    <h3 className="font-medium">Knapsack & Branch-and-Bound</h3>
+                    <h3 className="font-medium">Workload Balancing</h3>
                     <p className="text-sm text-muted-foreground mt-2">
-                      Workload rebalancing and urgent task handling algorithms optimally 
+                      Smart rebalancing and urgent task handling optimally 
                       redistribute tasks when workloads become unbalanced.
                     </p>
                   </div>
@@ -533,9 +533,9 @@ const Analytics: React.FC = () => {
                 <div className="mt-6">
                   <h3 className="font-medium mb-2">System Optimization Summary</h3>
                   <p className="text-sm text-muted-foreground">
-                    The AI Task Optimization System has successfully implemented all four key algorithms: Merge Sort for task sorting,
-                    Min-Heap for smart task allocation, Knapsack Algorithm for workload balancing, and Branch & Bound for urgent task handling.
-                    These algorithms work together to ensure optimal task distribution, efficient resource utilization, and rapid response to changing priorities.
+                    The AI Task Optimization System efficiently handles task sorting, smart allocation, workload balancing, 
+                    and urgent task handling. These features work together to ensure optimal task distribution, efficient 
+                    resource utilization, and rapid response to changing priorities.
                   </p>
                 </div>
               </CardContent>
