@@ -4,13 +4,14 @@ import json
 
 # Task and Employee models
 class Task:
-    def __init__(self, task_id: int, title: str, priority: int, 
+    def __init__(self, id: int, title: str, priority: int, 
                  assigned_employee_id: Optional[int] = None,
                  dependencies: List[int] = None, 
+                 description=None,
                  urgency_flag: bool = False,
                  estimated_effort: int = 1,
                  status: str = "pending"):
-        self.id = task_id
+        self.id = id
         self.title = title
         self.priority = priority
         self.assigned_employee_id = assigned_employee_id
@@ -20,10 +21,11 @@ class Task:
         self.status = status
 
 class Employee:
-    def __init__(self, employee_id: int, name: str, 
+    def __init__(self, id: int, name: str, 
                  efficiency_score: float = 1.0, 
+                 position=None,
                  current_workload: int = 0):
-        self.id = employee_id
+        self.id = id
         self.name = name
         self.efficiency_score = efficiency_score
         self.current_workload = current_workload
@@ -222,6 +224,7 @@ def balance_workload_json(tasks_json: str, employees_json: str) -> str:
     tasks_data = json.loads(tasks_json)
     employees_data = json.loads(employees_json)
     
+    print(tasks_data)
     tasks = [Task(**t) for t in tasks_data]
     employees = [Employee(**e) for e in employees_data]
     

@@ -1,4 +1,12 @@
-import { pgTable, text, serial, integer, boolean, real, json } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  serial,
+  integer,
+  boolean,
+  real,
+  json,
+} from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -8,6 +16,7 @@ export const employees = pgTable("employees", {
   name: text("name").notNull(),
   efficiency_score: real("efficiency_score").notNull().default(1.0),
   current_workload: integer("current_workload").notNull().default(0),
+  position: text("position"),
 });
 
 // Define task status enum
@@ -24,7 +33,9 @@ export const tasks = pgTable("tasks", {
   description: text("description"),
   priority: integer("priority").notNull().default(1),
   status: text("status").notNull().default(TaskStatus.PENDING),
-  assigned_employee_id: integer("assigned_employee_id").references(() => employees.id),
+  assigned_employee_id: integer("assigned_employee_id").references(
+    () => employees.id
+  ),
   dependencies: json("dependencies").$type<number[]>().default([]),
   urgency_flag: boolean("urgency_flag").notNull().default(false),
   estimated_effort: integer("estimated_effort").notNull().default(1), // Used for workload calculations
@@ -40,19 +51,23 @@ export const insertTaskSchema = createInsertSchema(tasks).omit({
   id: true,
 });
 
-export const updateTaskSchema = createInsertSchema(tasks).omit({
-  id: true,
-}).partial();
+export const updateTaskSchema = createInsertSchema(tasks)
+  .omit({
+    id: true,
+  })
+  .partial();
 
-export const updateEmployeeSchema = createInsertSchema(employees).omit({
-  id: true,
-}).partial();
+export const updateEmployeeSchema = createInsertSchema(employees)
+  .omit({
+    id: true,
+  })
+  .partial();
 
 // Zod validation for task status
 export const taskStatusSchema = z.enum([
   TaskStatus.PENDING,
-  TaskStatus.IN_PROGRESS, 
-  TaskStatus.COMPLETED
+  TaskStatus.IN_PROGRESS,
+  TaskStatus.COMPLETED,
 ]);
 
 // Type definitions

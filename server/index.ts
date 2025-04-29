@@ -5,16 +5,24 @@ import { spawn } from "child_process";
 
 // Start the Python FastAPI server
 const startFastAPIServer = () => {
-  const pythonProcess = spawn("python", ["-m", "uvicorn", "server.fastapi_app:app", "--host", "0.0.0.0", "--port", "8000"]);
-  
+  const pythonProcess = spawn("python", [
+    "-m",
+    "uvicorn",
+    "server.fastapi_app:app",
+    "--host",
+    "localhost",
+    "--port",
+    "8000",
+  ]);
+
   pythonProcess.stdout.on("data", (data) => {
     log(`[FastAPI] ${data}`, "python");
   });
-  
+
   pythonProcess.stderr.on("data", (data) => {
     log(`[FastAPI Error] ${data}`, "python");
   });
-  
+
   pythonProcess.on("close", (code) => {
     log(`[FastAPI] process exited with code ${code}`, "python");
     // Restart the server if it crashes
@@ -23,7 +31,7 @@ const startFastAPIServer = () => {
       setTimeout(startFastAPIServer, 1000);
     }
   });
-  
+
   return pythonProcess;
 };
 
@@ -96,11 +104,7 @@ app.use((req, res, next) => {
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
   const port = 5000;
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
+  server.listen(port, "0.0.0.0", () => {
+    log(`Serving on port ${port}`);
   });
 })();

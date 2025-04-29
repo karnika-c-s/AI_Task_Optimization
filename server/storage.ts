@@ -1,22 +1,25 @@
-import { 
-  employees, 
-  tasks, 
-  type Employee, 
-  type InsertEmployee, 
-  type Task, 
+import { Client } from "pg";
+import {
+  type Employee,
+  type InsertEmployee,
+  type Task,
   type InsertTask,
-  TaskStatus
 } from "@shared/schema";
 
-// Storage interface for task optimization system
 export interface IStorage {
   // Employee operations
   getEmployee(id: number): Promise<Employee | undefined>;
   getAllEmployees(): Promise<Employee[]>;
   createEmployee(employee: InsertEmployee): Promise<Employee>;
-  updateEmployee(id: number, employee: Partial<Employee>): Promise<Employee | undefined>;
-  updateEmployeeWorkload(id: number, workload: number): Promise<Employee | undefined>;
-  
+  updateEmployee(
+    id: number,
+    employee: Partial<Employee>
+  ): Promise<Employee | undefined>;
+  updateEmployeeWorkload(
+    id: number,
+    workload: number
+  ): Promise<Employee | undefined>;
+
   // Task operations
   getTask(id: number): Promise<Task | undefined>;
   getAllTasks(): Promise<Task[]>;
@@ -25,131 +28,191 @@ export interface IStorage {
   createTask(task: InsertTask): Promise<Task>;
   updateTask(id: number, task: Partial<Task>): Promise<Task | undefined>;
   updateTaskStatus(id: number, status: string): Promise<Task | undefined>;
-  updateTaskAssignment(id: number, employeeId: number | null): Promise<Task | undefined>;
-  updateTaskUrgency(id: number, urgencyFlag: boolean): Promise<Task | undefined>;
+  updateTaskAssignment(
+    id: number,
+    employeeId: number | null
+  ): Promise<Task | undefined>;
+  updateTaskUrgency(
+    id: number,
+    urgencyFlag: boolean
+  ): Promise<Task | undefined>;
   getTasksWithDependencies(): Promise<Task[]>;
 }
-
-export class MemStorage implements IStorage {
-  private employees: Map<number, Employee>;
-  private tasks: Map<number, Task>;
-  private employeeIdCounter: number;
-  private taskIdCounter: number;
+export class PostgresStorage implements IStorage {
+  private client: Client;
 
   constructor() {
-    this.employees = new Map();
-    this.tasks = new Map();
-    this.employeeIdCounter = 1;
-    this.taskIdCounter = 1;
+    this.client = new Client({
+      user: "postgres",
+      host: "localhost",
+      database: "ai_task_automations",
+      password: "Harihk@1106",
+      port: 5432,
+    });
+
+    this.client.connect();
   }
 
-  // Employee operations
+  // ---------- EMPLOYEE METHODS ----------
+
   async getEmployee(id: number): Promise<Employee | undefined> {
-    return this.employees.get(id);
+    const res = await this.client.query(
+      "SELECT * FROM employees WHERE id = $1",
+      [id]
+    );
+    return res.rows[0];
   }
 
   async getAllEmployees(): Promise<Employee[]> {
-    return Array.from(this.employees.values());
+    const res = await this.client.query("SELECT * FROM employees");
+    return res.rows;
   }
 
   async createEmployee(employee: InsertEmployee): Promise<Employee> {
-    const id = this.employeeIdCounter++;
-    const newEmployee: Employee = { 
-      ...employee, 
-      id, 
-      current_workload: 0 
-    };
-    this.employees.set(id, newEmployee);
-    return newEmployee;
+    const res = await this.client.query(
+      `INSERT INTO employees (name, position, current_workload , efficiency_score)
+       VALUES ($1, $2, $3 , $4)
+       RETURNING *`,
+      [employee.name, null, 0, employee.efficiency_score]
+    );
+    return res.rows[0];
   }
 
-  async updateEmployee(id: number, employeeData: Partial<Employee>): Promise<Employee | undefined> {
-    const employee = this.employees.get(id);
-    if (!employee) return undefined;
-    
-    const updatedEmployee = { ...employee, ...employeeData };
-    this.employees.set(id, updatedEmployee);
-    return updatedEmployee;
+  async updateEmployee(
+    id: number,
+    employeeData: Partial<Employee>
+  ): Promise<Employee | undefined> {
+    const fields = Object.keys(employeeData);
+    const values = Object.values(employeeData);
+
+    if (fields.length === 0) return this.getEmployee(id);
+
+    const setClause = fields.map((f, i) => `${f} = $${i + 1}`).join(", ");
+    const res = await this.client.query(
+      `UPDATE employees SET ${setClause} WHERE id = $${
+        fields.length + 1
+      } RETURNING *`,
+      [...values, id]
+    );
+    return res.rows[0];
   }
 
-  async updateEmployeeWorkload(id: number, workload: number): Promise<Employee | undefined> {
-    const employee = this.employees.get(id);
-    if (!employee) return undefined;
-    
-    const updatedEmployee = { ...employee, current_workload: workload };
-    this.employees.set(id, updatedEmployee);
-    return updatedEmployee;
+  async updateEmployeeWorkload(
+    id: number,
+    workload: number
+  ): Promise<Employee | undefined> {
+    const res = await this.client.query(
+      "UPDATE employees SET current_workload = $1 WHERE id = $2 RETURNING *",
+      [workload, id]
+    );
+    return res.rows[0];
   }
 
-  // Task operations
+  // ---------- TASK METHODS ----------
+
   async getTask(id: number): Promise<Task | undefined> {
-    return this.tasks.get(id);
+    const res = await this.client.query("SELECT * FROM tasks WHERE id = $1", [
+      id,
+    ]);
+    return res.rows[0];
   }
 
   async getAllTasks(): Promise<Task[]> {
-    return Array.from(this.tasks.values());
+    const res = await this.client.query("SELECT * FROM tasks");
+    return res.rows;
   }
 
   async getTasksByEmployeeId(employeeId: number): Promise<Task[]> {
-    return Array.from(this.tasks.values()).filter(
-      task => task.assigned_employee_id === employeeId
+    const res = await this.client.query(
+      "SELECT * FROM tasks WHERE assigned_employee_id = $1",
+      [employeeId]
     );
+    return res.rows;
   }
 
   async getTasksByStatus(status: string): Promise<Task[]> {
-    return Array.from(this.tasks.values()).filter(
-      task => task.status === status
+    const res = await this.client.query(
+      "SELECT * FROM tasks WHERE status = $1",
+      [status]
     );
+    return res.rows;
   }
 
   async createTask(task: InsertTask): Promise<Task> {
-    const id = this.taskIdCounter++;
-    const newTask: Task = { ...task, id };
-    this.tasks.set(id, newTask);
-    return newTask;
+    const res = await this.client.query(
+      `INSERT INTO tasks (title, description, status, urgency_flag, assigned_employee_id, dependencies)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING *`,
+      [
+        task.title,
+        task.description,
+        task.status,
+        task.urgency_flag ?? false,
+        task.assigned_employee_id ?? null,
+        task.dependencies ?? [],
+      ]
+    );
+    return res.rows[0];
   }
 
-  async updateTask(id: number, taskData: Partial<Task>): Promise<Task | undefined> {
-    const task = this.tasks.get(id);
-    if (!task) return undefined;
-    
-    const updatedTask = { ...task, ...taskData };
-    this.tasks.set(id, updatedTask);
-    return updatedTask;
+  async updateTask(
+    id: number,
+    taskData: Partial<Task>
+  ): Promise<Task | undefined> {
+    const fields = Object.keys(taskData);
+    const values = Object.values(taskData);
+
+    if (fields.length === 0) return this.getTask(id);
+
+    const setClause = fields.map((f, i) => `${f} = $${i + 1}`).join(", ");
+    const res = await this.client.query(
+      `UPDATE tasks SET ${setClause} WHERE id = $${
+        fields.length + 1
+      } RETURNING *`,
+      [...values, id]
+    );
+    return res.rows[0];
   }
 
-  async updateTaskStatus(id: number, status: string): Promise<Task | undefined> {
-    const task = this.tasks.get(id);
-    if (!task) return undefined;
-    
-    const updatedTask = { ...task, status };
-    this.tasks.set(id, updatedTask);
-    return updatedTask;
+  async updateTaskStatus(
+    id: number,
+    status: string
+  ): Promise<Task | undefined> {
+    const res = await this.client.query(
+      "UPDATE tasks SET status = $1 WHERE id = $2 RETURNING *",
+      [status, id]
+    );
+    return res.rows[0];
   }
 
-  async updateTaskAssignment(id: number, employeeId: number | null): Promise<Task | undefined> {
-    const task = this.tasks.get(id);
-    if (!task) return undefined;
-    
-    const updatedTask = { ...task, assigned_employee_id: employeeId };
-    this.tasks.set(id, updatedTask);
-    return updatedTask;
+  async updateTaskAssignment(
+    id: number,
+    employeeId: number | null
+  ): Promise<Task | undefined> {
+    const res = await this.client.query(
+      "UPDATE tasks SET assigned_employee_id = $1 WHERE id = $2 RETURNING *",
+      [employeeId, id]
+    );
+    return res.rows[0];
   }
 
-  async updateTaskUrgency(id: number, urgencyFlag: boolean): Promise<Task | undefined> {
-    const task = this.tasks.get(id);
-    if (!task) return undefined;
-    
-    const updatedTask = { ...task, urgency_flag: urgencyFlag };
-    this.tasks.set(id, updatedTask);
-    return updatedTask;
+  async updateTaskUrgency(
+    id: number,
+    urgencyFlag: boolean
+  ): Promise<Task | undefined> {
+    const res = await this.client.query(
+      "UPDATE tasks SET urgency_flag = $1 WHERE id = $2 RETURNING *",
+      [urgencyFlag, id]
+    );
+    return res.rows[0];
   }
 
   async getTasksWithDependencies(): Promise<Task[]> {
-    return Array.from(this.tasks.values()).filter(
-      task => task.dependencies && (task.dependencies as number[]).length > 0
+    const res = await this.client.query(
+      "SELECT * FROM tasks WHERE array_length(dependencies, 1) > 0"
     );
+    return res.rows;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new PostgresStorage();
