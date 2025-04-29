@@ -170,36 +170,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create the task first
       const newTask = await storage.createTask(validationResult.data);
       
-      // Auto-assign the task to an employee with the lowest workload if unassigned
+      // Auto-assign the task to an employee using Min-Heap algorithm if unassigned
       if (!newTask.assigned_employee_id) {
         try {
           // Get all employees
           const employees = await storage.getAllEmployees();
           
           if (employees.length > 0) {
-            // Sort employees by workload (lowest first) and efficiency (highest first)
-            const sortedEmployees = [...employees].sort((a, b) => {
-              // First, normalize workload by efficiency score
-              const normalizedWorkloadA = a.current_workload / a.efficiency_score;
-              const normalizedWorkloadB = b.current_workload / b.efficiency_score;
-              
-              // Then sort by normalized workload (ascending)
-              return normalizedWorkloadA - normalizedWorkloadB;
+            // Use the Python algorithm service for min-heap allocation
+            const response = await axios.post("http://localhost:8000/api/algorithm/allocate-tasks", {
+              tasks: [newTask], // Just allocate the new task
+              employees: employees
             });
             
-            // Assign to employee with lowest normalized workload
-            const bestEmployee = sortedEmployees[0];
+            const allocations = response.data.assignments;
+            const updatedEmployees = response.data.updated_employees;
             
-            // Update task with assigned employee
-            const updatedTask = await storage.updateTaskAssignment(newTask.id, bestEmployee.id);
-            
-            // Update employee workload
-            const newWorkload = bestEmployee.current_workload + (newTask.estimated_effort || 1);
-            await storage.updateEmployeeWorkload(bestEmployee.id, newWorkload);
-            
-            // Return the updated task
-            res.status(201).json(updatedTask);
-            return;
+            // If we have an allocation, apply it
+            if (allocations && allocations.length > 0) {
+              const allocation = allocations[0]; // Should only be one task being allocated
+              
+              // Update task with assigned employee
+              const updatedTask = await storage.updateTaskAssignment(
+                allocation.task_id, 
+                allocation.employee_id
+              );
+              
+              // Update all employee workloads
+              for (const employee of updatedEmployees) {
+                await storage.updateEmployeeWorkload(employee.id, employee.current_workload);
+              }
+              
+              // Return the updated task
+              res.status(201).json(updatedTask);
+              return;
+            }
           }
         } catch (assignError) {
           console.error("Error auto-assigning new task:", assignError);

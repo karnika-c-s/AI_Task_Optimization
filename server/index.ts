@@ -1,6 +1,42 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { spawn } from "child_process";
+
+// Start the Python FastAPI server
+const startFastAPIServer = () => {
+  const pythonProcess = spawn("python", ["-m", "uvicorn", "server.fastapi_app:app", "--host", "0.0.0.0", "--port", "8000"]);
+  
+  pythonProcess.stdout.on("data", (data) => {
+    log(`[FastAPI] ${data}`, "python");
+  });
+  
+  pythonProcess.stderr.on("data", (data) => {
+    log(`[FastAPI Error] ${data}`, "python");
+  });
+  
+  pythonProcess.on("close", (code) => {
+    log(`[FastAPI] process exited with code ${code}`, "python");
+    // Restart the server if it crashes
+    if (code !== 0) {
+      log("[FastAPI] Restarting server...", "python");
+      setTimeout(startFastAPIServer, 1000);
+    }
+  });
+  
+  return pythonProcess;
+};
+
+// Start the FastAPI server
+const fastAPIProcess = startFastAPIServer();
+
+// Handle process termination
+process.on("SIGINT", () => {
+  if (fastAPIProcess) {
+    fastAPIProcess.kill();
+  }
+  process.exit();
+});
 
 const app = express();
 app.use(express.json());

@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import json
 import uvicorn
 from typing import List, Dict, Optional
-from algorithms import (
+from server.algorithms import (
     sort_tasks_json, 
     allocate_tasks_json, 
     balance_workload_json, 
