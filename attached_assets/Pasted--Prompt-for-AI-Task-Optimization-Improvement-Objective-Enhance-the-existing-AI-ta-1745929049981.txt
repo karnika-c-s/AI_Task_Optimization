@@ -1,0 +1,36 @@
+**Prompt for AI Task Optimization Improvement:**
+
+---
+
+**Objective:** Enhance the existing AI task optimization system to incorporate an automatic allocation feature based on employee efficiency and workload management.
+
+**Requirements:**
+
+1. **Employee Efficiency Tracking:**
+   - Implement a mechanism to continuously monitor and evaluate the efficiency of each employee based on predefined performance metrics (e.g., task completion time, quality of work, feedback scores).
+   - Create a scoring system that updates in real-time as tasks are completed or new tasks are assigned.
+
+2. **Task Allocation Logic:**
+   - Develop an algorithm that automatically assigns tasks to employees based on their efficiency scores. The algorithm should prioritize high-efficiency employees for high-priority tasks.
+   - Ensure that if an employee's workload exceeds a certain threshold (e.g., a maximum number of active tasks), the system automatically reallocates low-priority tasks to other employees with available capacity.
+
+3. **Dynamic Workload Management:**
+   - Introduce a feature that dynamically adjusts task assignments based on real-time workload data. This includes tracking task completion rates and employee availability.
+   - Implement notifications or alerts for employees when they are nearing their workload limits and suggest potential reallocation of tasks.
+
+4. **User Interface Update:**
+   - Modify the existing user interface to display employee efficiency scores and current workload status for better visibility during task allocation.
+   - Provide options for managers to manually intervene in the task allocation process if necessary, while still leveraging the automated system.
+
+5. **Testing and Validation:**
+   - Conduct thorough testing of the new allocation algorithm to ensure it functions as expected under various scenarios (e.g., varying employee efficiencies, different task priorities).
+   - Gather feedback from end users to identify any issues or areas for improvement post-implementation.
+
+**Deliverables:**
+- A detailed design document outlining the new features and algorithms.
+- Updated codebase with the implemented changes.
+- User acceptance testing (UAT) results and feedback summary.
+
+--- 
+
+**End of Prompt**
